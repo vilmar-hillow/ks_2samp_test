@@ -34,6 +34,7 @@ def get_features(data: pd.DataFrame):
 
     return data[numeric_fields]
 
+
 if __name__ == "__main__":
     raw_data = get_data()
     features = get_features(raw_data)
@@ -42,4 +43,15 @@ if __name__ == "__main__":
 
     for feature_name in features.columns:
         scipy_p_value = ks_2samp(reference[feature_name], features[feature_name])[1]
+        print(f"Feature '{feature_name}' p value: {scipy_p_value}")
+
+    # When you save the data to csv and load it again, the floating point representations
+    # are changing slightly (~1e-17). Since the two-sample KS test depends on orderings
+    # rather than precise numerical, this makes a big difference in the resulting calculation.
+    # When you convert to 32-bit, those numerical differences vanish.
+    for feature_name in features.columns:
+        scipy_p_value = ks_2samp(
+            reference[feature_name].astype("float32"),
+            features[feature_name].astype("float32"),
+        )[1]
         print(f"Feature '{feature_name}' p value: {scipy_p_value}")
